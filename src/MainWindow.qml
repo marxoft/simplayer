@@ -1,20 +1,20 @@
 /*
- * Copyright (C) 2014 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2015 Stuart Howarth <showarth@marxoft.co.uk>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU Lesser General Public License,
- * version 3, as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
  *
- * This program is distributed in the hope it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
- * more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import QtQuick 1.0
 import org.hildon.components 1.0
 import org.hildon.multimedia 1.0
 import org.hildon.settings 1.0
@@ -24,39 +24,49 @@ import "Utils.js" as Utils
 Window {
     id: window
     
-    windowTitle: (!Qt.application.active) && (audioPlayer.metaData.title) ? audioPlayer.metaData.title
-                                                                          : "SimPlayer"
-    tools: [
-        Action {
+    property AboutDialog aboutDialog
+    property SettingsDialog settingsDialog
+    
+    visible: true
+    title: (!Qt.application.active) && (audioPlayer.metaData.title) ? audioPlayer.metaData.title
+                                                                    : "SimPlayer"
+    
+    menuBar: MenuBar {
+        MenuItem {
             text: qsTr("Open location")
             onTriggered: {
-                dialogLoader.sourceComponent = locationDialog;
-                dialogLoader.item.open();
-            }
-        },
-        
-        Action {
-            text: qsTr("Clear now playing")
-            visible: playlist.count > 0
-            onTriggered: playlist.clearItems()
-        },
-        
-        Action {
-            text: qsTr("Settings")
-            onTriggered: {
-                dialogLoader.sourceComponent = settingsDialog;
-                dialogLoader.item.open();
-            }
-        },
-        
-        Action {
-            text: qsTr("About")
-            onTriggered: {
-                dialogLoader.sourceComponent = aboutDialog;
-                dialogLoader.item.open();
+                fileDialog.folder = directory.path;
+                fileDialog.open();
             }
         }
-    ]
+        
+        MenuItem {
+            text: qsTr("Clear now playing")
+            onTriggered: playlist.clearItems()
+        }
+        
+        MenuItem {
+            text: qsTr("Settings")
+            onTriggered: {
+                if (!settingsDialog) {
+                    settingsDialog = settingsDialogComponent.createObject(window);
+                }
+                
+                settingsDialog.open();
+            }
+        }
+        
+        MenuItem {
+            text: qsTr("About")
+            onTriggered: {
+                if (!aboutDialog) {
+                    aboutDialog = aboutDialogComponent.createObject(window);
+                }
+                
+                aboutDialog.open();
+            }
+        }
+    }
     
     Audio {
         id: audioPlayer
@@ -64,7 +74,7 @@ Window {
         tickInterval: (screen.covered) || (infoLoader.sourceComponent == playlistView) ? 0 
                                                                                        : Qt.application.active ? 1000 
                                                                                                                : 10000
-        onError: infobox.showError(errorString);
+        onError: informationBox.information(errorString);
     }
     
     NowPlayingModel {
@@ -85,7 +95,7 @@ Window {
             }
             else {
                 directory.path = p;
-                infobox.showMessage(qsTr("No songs found"));
+                informationBox.information(qsTr("No songs found"));
             }
         }
         
@@ -105,7 +115,7 @@ Window {
         id: directory
         
         path: "/home/user/MyDocs"
-        nameFilters: [ "*.mp3", "*.ogg", "*.flac", "*.m4a", "*.wma", "*.ape" ]
+        nameFilters: [ "*.mp3", "*.ogg", "*.flac", "*.wav", "*.m4a", "*.wma", "*.ape", "*.aiff" ]
     }
     
     Settings {
@@ -156,6 +166,12 @@ Window {
     Loader {
         id: infoLoader
         
+        anchors {
+            left: image.right
+            right: parent.right
+            top: parent.top
+            bottom: toolsLoader.top
+        }
         sourceComponent: infoColumn
     }
     
@@ -164,46 +180,52 @@ Window {
         
         Column {
             anchors {
-                top: parent.top
-                bottom: toolsLoader.item.top
-                left: image.right
-                right: parent.right
-                margins: platformStyle.paddingLarge * 2
+                fill: parent
+                leftMargin: platformStyle.paddingLarge * 2
+                rightMargin: platformStyle.paddingLarge * 2
+                topMargin: platformStyle.paddingLarge
+                bottomMargin: platformStyle.paddingLarge
             }
             spacing: platformStyle.paddingLarge
             
             Label {
-                height: 50
-                alignment: Qt.AlignTop
-                font.pixelSize: platformStyle.fontSizeSmall
+                width: parent.width
+                height: 60
+                font.pointSize: platformStyle.fontSizeSmall
                 color: platformStyle.secondaryTextColor
+                elide: Text.ElideRight
                 text: playlist.count ? (playlist.position + 1) + "/" + playlist.count + " " + qsTr("songs") : qsTr("(no songs)")
             }
             
             Label {
+                width: parent.width
+                elide: Text.ElideRight
                 text: audioPlayer.metaData.title ? audioPlayer.metaData.title : qsTr("(unknown song)")
             }
             
             Row {
+                width: parent.width
+                spacing: platformStyle.paddingLarge
                 
                 Label {
+                    width: 50
                     height: positionSlider.height
-                    alignment: Qt.AlignLeft | Qt.AlignVCenter
-                    font.pixelSize: platformStyle.fontSizeSmall
+                    verticalAlignment: Text.AlignVCenter
+                    font.pointSize: platformStyle.fontSizeSmall
                     text: Utils.formatSeconds(positionSlider.value)
                 }
                 
                 Slider {
                     id: positionSlider
                     
-                    height: 70
+                    width: parent.width - 100 - parent.spacing * 2
                     maximum: audioPlayer.duration
                     enabled: (audioPlayer.seekable) && ((audioPlayer.playing) || (audioPlayer.paused))
-                    onSliderReleased: audioPlayer.position = value
+                    onPressedChanged: if (!pressed) audioPlayer.position = value;
                     
                     Connections {
                         target: audioPlayer
-                        onPositionChanged: if (!positionSlider.sliderPressed) positionSlider.value = audioPlayer.position;
+                        onPositionChanged: if (!positionSlider.pressed) positionSlider.value = audioPlayer.position;
                     }
                     
                     Component.onCompleted: value = audioPlayer.position
@@ -212,9 +234,11 @@ Window {
                 Label {
                     property bool showRemaining
                     
+                    width: 50
                     height: positionSlider.height
-                    alignment: Qt.AlignRight | Qt.AlignVCenter
-                    font.pixelSize: platformStyle.fontSizeSmall
+                    horizontalAlignment: Text.AlignRight
+                    verticalAlignment: Text.AlignVCenter
+                    font.pointSize: platformStyle.fontSizeSmall
                     text: showRemaining ? "- " + Utils.formatSeconds(audioPlayer.duration - positionSlider.value)
                                         : Utils.formatSeconds(audioPlayer.duration)
                                         
@@ -226,11 +250,15 @@ Window {
             }
             
             Label {
+                width: parent.width
+                elide: Text.ElideRight
                 text: audioPlayer.metaData.artist ? audioPlayer.metaData.artist : qsTr("(unknown artist)")
             }
             
             Label {
+                width: parent.width
                 color: platformStyle.secondaryTextColor
+                elide: Text.ElideRight
                 text: audioPlayer.metaData.albumTitle ? audioPlayer.metaData.albumTitle : qsTr("(unknown album)")
             }
         }
@@ -243,121 +271,110 @@ Window {
             id: view
             
             anchors {
-                top: parent.top
-                bottom: toolsLoader.item.top
-                left: image.right
+                fill: parent
                 leftMargin: platformStyle.paddingLarge * 2
-                right: parent.right
             }
-            focusPolicy: Qt.NoFocus
-            contextMenuPolicy: playlist.count > 0 ? Qt.ActionsContextMenu : Qt.NoContextMenu
+            clip: true
             horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
-            horizontalScrollMode: ListView.ScrollPerItem
             model: playlist
             delegate: ListItem {
-                width: view.width - (playlist.count > 5 ? platformStyle.paddingMedium : 0)
-                
-                ListItemImage {
-                    anchors.fill: parent
-                    source: "image://theme/TouchListBackground" + (isCurrentItem ? "Pressed" : "Normal")
-                    smooth: true
+                style: ListItemStyle {
+                    background: "image://theme/TouchListBackground" + (playlist.position == index ? "Pressed" : "Normal")
                 }
                 
-                ListItemLabel {
+                Label {
                     id: titleLabel
                     
-                    height: 32
                     anchors {
                         left: parent.left
                         right: durationLabel.left
                         top: parent.top
                         margins: platformStyle.paddingMedium
                     }
-                    alignment: Qt.AlignLeft | Qt.AlignTop
-                    text: modelData.title ? modelData.title : qsTr("(unknown title)")
+                    elide: Text.ElideRight
+                    text: title ? title : qsTr("(unknown title)")
                 }
                 
-                ListItemLabel {
+                Label {
                     id: artistLabel
                     
-                    height: 32
                     anchors {
                         left: parent.left
-                        right: parent.right
+                        right: durationLabel.left
                         bottom: parent.bottom
                         margins: platformStyle.paddingMedium
                     }
-                    alignment: Qt.AlignLeft | Qt.AlignBottom
-                    font.pixelSize: platformStyle.fontSizeSmall
+                    verticalAlignment: Text.AlignBottom
+                    font.pointSize: platformStyle.fontSizeSmall
                     color: platformStyle.secondaryTextColor
-                    text: (modelData.artist ? modelData.artist : qsTr("(unknown artist)"))
-                           + " / "
-                           + (modelData.albumTitle ? modelData.albumTitle : qsTr("(unknown album)"))
+                    elide: Text.ElideRight
+                    text: (artist ? artist : qsTr("(unknown artist)")) + " / "
+                           + (albumTitle ? albumTitle : qsTr("(unknown album)"))
                 }
                 
-                ListItemLabel {
+                Label {
                     id: durationLabel
                     
-                    width: 80
-                    height: 32
                     anchors {
                         right: parent.right
                         top: parent.top
                         margins: platformStyle.paddingMedium
                     }
-                    alignment: Qt.AlignRight | Qt.AlignTop
-                    text: Utils.formatSeconds(modelData.duration)
+                    horizontalAlignment: Text.AlignRight
+                    text: Utils.formatSeconds(duration)
                 }
-            }
-            
-            actions: [
-                Action {
-                    text: qsTr("Delete from now playing")
-                    onTriggered: playlist.removeItem(view.currentIndex)
-                },
                 
-                Action {
-                    text: qsTr("Clear now playing")
-                    onTriggered: playlist.clearItems()
-                }
-            ]
-                        
-            onClicked: playlist.position = QModelIndex.row(currentIndex)
-            
+                onClicked: playlist.position = index
+            }
+                                    
             Connections {
                 target: playlist
                 onPositionChanged: {
-                    currentIndex = playlist.modelIndex(playlist.position);
-                    positionViewAtIndex(currentIndex, ListView.PositionAtCenter, false);
+                    currentIndex = playlist.position;
+                    positionViewAtIndex(currentIndex, ListView.Center);
                 }
             }
             
             Component.onCompleted: {
-                currentIndex = playlist.modelIndex(playlist.position);
-                positionViewAtIndex(currentIndex, ListView.PositionAtCenter, false);
+                currentIndex = playlist.position;
+                positionViewAtIndex(currentIndex, ListView.Center);
             }
         }
     }
     
+    ToolButtonStyle {
+        id: transparentToolButtonStyle
+        
+        background: ""
+        backgroundChecked: ""
+        backgroundDisabled: ""
+        backgroundPressed: ""
+        iconWidth: 64
+        iconHeight: 64
+    }
+        
     ToolButton {
         id: volumeButton
         
-        width: 70
-        height: 70
         anchors {
             right: parent.right
             rightMargin: platformStyle.paddingLarge
             bottom: parent.bottom
         }
-        styleSheet: "background: transparent"
         checkable: true
-        iconSize: "64x64"
-        icon: "/usr/share/icons/hicolor/64x64/hildon/mediaplayer_volume.png"
+        iconName: "mediaplayer_volume"
+        Component.onCompleted: style = transparentToolButtonStyle
     }
     
     Loader {
         id: toolsLoader
         
+        height: 70
+        anchors {
+            left: image.left
+            right: volumeButton.left
+            bottom: parent.bottom
+        }
         sourceComponent: volumeButton.checked ? volumeSlider : playbackControls
     }
     
@@ -365,58 +382,42 @@ Window {
         id: playbackControls
         
         Row {
-            anchors {
-                left: image.left
-                right: volumeButton.left
-                bottom: parent.bottom
-            }
-            height: 70
-            spacing: 35
+            spacing: 42
             
             ToolButton {
-                styleSheet: "background: transparent"
-                iconSize: "64x64"
-                icon: "/etc/hildon/theme/mediaplayer/Back" + (pressed ? "Pressed" : "") + ".png"
-                shortcut: "Left"
+                iconSource: "/etc/hildon/theme/mediaplayer/Back" + (pressed ? "Pressed" : "") + ".png"
                 onClicked: playlist.previous()
+                Component.onCompleted: style = transparentToolButtonStyle
             }
             
             ToolButton {
-                styleSheet: "background: transparent"
-                iconSize: "64x64"
-                icon: "/etc/hildon/theme/mediaplayer/" + (audioPlayer.playing ? "Pause" : "Play") + ".png"
-                shortcut: "Space"
+                iconSource: "/etc/hildon/theme/mediaplayer/" + (audioPlayer.playing ? "Pause" : "Play") + ".png"
                 onClicked: if (audioPlayer.source) audioPlayer.playing = !audioPlayer.playing;
+                Component.onCompleted: style = transparentToolButtonStyle
             }
             
             ToolButton {
-                styleSheet: "background: transparent"
-                iconSize: "64x64"
-                icon: "/etc/hildon/theme/mediaplayer/Forward" + (pressed ? "Pressed" : "") + ".png"
-                shortcut: "Right"
+                iconSource: "/etc/hildon/theme/mediaplayer/Forward" + (pressed ? "Pressed" : "") + ".png"
                 onClicked: playlist.next()
+                Component.onCompleted: style = transparentToolButtonStyle
             }
             
             ToolButton {
                 width: 130
-                styleSheet: "background: transparent"
+                iconSource: "/etc/hildon/theme/mediaplayer/Shuffle" + ((checked) || (pressed) ? "Pressed" : "") + ".png"
                 checkable: true
-                iconSize: "64x64"
-                icon: "/etc/hildon/theme/mediaplayer/Shuffle" + ((checked) || (pressed) ? "Pressed" : "") + ".png"
-                shortcut: "e"
                 checked: playlist.shuffle
                 onClicked: playlist.shuffle = !playlist.shuffle
+                Component.onCompleted: style = transparentToolButtonStyle
             }
             
             ToolButton {
                 width: 130
-                styleSheet: "background: transparent"
+                iconSource: "/etc/hildon/theme/mediaplayer/Repeat" + ((checked) || (pressed) ? "Pressed" : "") + ".png"
                 checkable: true
-                iconSize: "64x64"
-                icon: "/etc/hildon/theme/mediaplayer/Repeat" + ((checked) || (pressed) ? "Pressed" : "") + ".png"
-                shortcut: "r"
                 checked: playlist.repeat
                 onClicked: playlist.repeat = !playlist.repeat
+                Component.onCompleted: style = transparentToolButtonStyle
             }
         }
     }
@@ -424,84 +425,74 @@ Window {
     Component {
         id: volumeSlider
         
-        Slider {
-            id: vSlider
+        Item {
+            Slider {
+                id: vSlider
+                
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    verticalCenter: parent.verticalCenter
+                }
+                onPressedChanged: if (!pressed) audioPlayer.volume = value;
             
-            height: 70
-            anchors {
-                left: image.left
-                right: volumeButton.left
-                bottom: parent.bottom
+                Connections {
+                    target: audioPlayer
+                    onVolumeChanged: if (!vSlider.pressed) vSlider.value = audioPlayer.volume;
+                }
+            
+                Timer {
+                    interval: 3000
+                    running: !vSlider.pressed
+                    onTriggered: volumeButton.checked = false
+                }
+            
+                Component.onCompleted: value = audioPlayer.volume
             }
-            maximum: 100
-            onSliderReleased: audioPlayer.volume = value
-            
-            Connections {
-                target: audioPlayer
-                onVolumeChanged: if (!vSlider.sliderPressed) vSlider.value = audioPlayer.volume;
-            }
-            
-            Timer {
-                interval: 3000
-                running: !vSlider.sliderPressed
-                onTriggered: volumeButton.checked = false
-            }
-            
-            Component.onCompleted: value = audioPlayer.volume
         }
     }
 
-    Loader {
-        id: dialogLoader
-    }
-    
-    Component {
-        id: locationDialog
+    FileDialog {
+        id: fileDialog
         
-        FolderDialog {
-            windowTitle: qsTr("Open location")
-            readOnly: true
-            onVisibleChanged: if ((visible) && (directory.path)) cd(directory.path);
-            onSelected: playlist.loadSongs(folder)
-        }
+        selectFolder: true
+        onAccepted: playlist.loadSongs(folder)
     }
     
     Component {
-        id: settingsDialog
+        id: settingsDialogComponent
         
         SettingsDialog {}
     }
     
     Component {
-        id: aboutDialog
+        id: aboutDialogComponent
         
         AboutDialog {}
     }
     
     InformationBox {
-        id: infobox
+        id: informationBox
         
-        function showMessage(message) {
-            minimumHeight = 70;
-            timeout = InformationBox.DefaultTimeout;
+        height: infoLabel.height + platformStyle.paddingLarge
+        
+        function information(message) {
             infoLabel.text = message;
             open();
         }
         
-        function showError(message) {
-            minimumHeight = 120;
-            timeout = InformationBox.NoTimeout;
-            infoLabel.text = message;
-            open();
-        }
-        
-        content: Label {
+        Label {
             id: infoLabel
             
-            anchors.fill: parent
-            alignment: Qt.AlignCenter
+            anchors {
+                fill: parent
+                leftMargin: platformStyle.paddingLarge
+                rightMargin: platformStyle.paddingLarge
+            }
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
             color: platformStyle.reversedTextColor
-            wordWrap: true
+            wrapMode: Text.WordWrap
         }
     }
 }

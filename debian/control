@@ -8,7 +8,7 @@ Homepage: https://github.com/marxoft/simplayer
 
 Package: simplayer
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, qt-components-hildon (>= 0.12.0), qt-components-hildon-viewer
+Depends: ${shlibs:Depends}, ${misc:Depends}, qt-components-hildon (>= 0.13.0), qt-components-hildon-viewer
 Description: A simple folder-based music player
  SimPlayer is a music player written entirely in QML, using Qt Components Hildon. 
  SimPlayer provides only basic features and is designed for playing music by folder.

@@ -12,4 +12,3 @@ desktop.files = desktop/simplayer.desktop
 desktop.path = /usr/share/applications/hildon
 
 INSTALLS += qml desktop
-
