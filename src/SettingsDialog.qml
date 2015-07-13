@@ -70,6 +70,6 @@ Dialog {
             }
         }
         
-        onSelected: settings.startupPlaylist = model.get(selectedIndex).value
+        onSelected: settings.startupPlaylist = model.get(currentIndex).value
     }    
 }
