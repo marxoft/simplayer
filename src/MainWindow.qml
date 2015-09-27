@@ -33,16 +33,11 @@ Window {
     
     menuBar: MenuBar {
         MenuItem {
-            text: qsTr("Open location")
-            onTriggered: {
-                fileDialog.folder = directory.path;
-                fileDialog.open();
-            }
+            action: openAction
         }
         
         MenuItem {
-            text: qsTr("Clear now playing")
-            onTriggered: playlist.clearItems()
+            action: clearAction
         }
         
         MenuItem {
@@ -66,6 +61,38 @@ Window {
                 aboutDialog.open();
             }
         }
+    }
+    
+    Action {
+        id: openAction
+        
+        text: qsTr("Open directory")
+        shortcut: "Ctrl+O"
+        autoRepeat: false
+        onTriggered: {
+            fileDialog.folder = directory.path;
+            fileDialog.open();
+        }
+    }
+    
+    Action {
+        id: clearAction
+        
+        text: qsTr("Clear now playing")
+        shortcut: "Ctrl+X"
+        autoRepeat: false
+        enabled: playlist.count > 0
+        onTriggered: playlist.clearItems()
+    }
+    
+    Action {
+        id: viewAction
+        
+        text: qsTr("Toggle view")
+        shortcut: "Ctrl+L"
+        autoRepeat: false
+        enabled: playlist.count > 0
+        onTriggered: infoLoader.sourceComponent = (infoLoader.sourceComponent == infoColumn ? playlistView : infoColumn)
     }
     
     Audio {
@@ -99,6 +126,7 @@ Window {
             }
         }
         
+        onCountChanged: if (count == 0) infoLoader.sourceComponent = infoColumn;
         onReady: {
             if (settings.startupPlaylist) {
                 if (settings.startupPlaylist == "mafw") {
@@ -159,7 +187,7 @@ Window {
         MouseArea {
             anchors.fill: parent
             enabled: playlist.count > 0
-            onClicked: infoLoader.sourceComponent = (infoLoader.sourceComponent == infoColumn ? playlistView : infoColumn)
+            onClicked: viewAction.trigger()
         }
     }
     
@@ -275,11 +303,13 @@ Window {
                 leftMargin: platformStyle.paddingLarge * 2
             }
             clip: true
+            focus: true
             horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
             model: playlist
             delegate: ListItem {
                 style: ListItemStyle {
-                    background: "image://theme/TouchListBackground" + (playlist.position == index ? "Pressed" : "Normal")
+                    background: "image://theme/TouchListBackground"
+                                + (view.currentIndex == index ? "Pressed" : "Normal")
                 }
                 
                 Label {
@@ -325,19 +355,31 @@ Window {
                 }
                 
                 onClicked: playlist.position = index
+                onPressAndHold: contextMenu.popup()
+            }
+            
+            Menu {
+                id: contextMenu
+                
+                MenuItem {
+                    text: qsTr("Delete from now playing")
+                    onTriggered: playlist.removeItem(view.currentIndex)
+                }
+                
+                MenuItem {
+                    action: clearAction
+                }
             }
                                     
             Connections {
                 target: playlist
-                onPositionChanged: {
-                    currentIndex = playlist.position;
-                    positionViewAtIndex(currentIndex, ListView.Center);
-                }
+                onPositionChanged: currentIndex = playlist.position
             }
             
             Component.onCompleted: {
                 currentIndex = playlist.position;
                 positionViewAtIndex(currentIndex, ListView.Center);
+                forceActiveFocus();
             }
         }
     }
@@ -363,7 +405,7 @@ Window {
         }
         checkable: true
         iconName: "mediaplayer_volume"
-        Component.onCompleted: style = transparentToolButtonStyle
+        style: transparentToolButtonStyle
     }
     
     Loader {
@@ -386,20 +428,26 @@ Window {
             
             ToolButton {
                 iconSource: "/etc/hildon/theme/mediaplayer/Back" + (pressed ? "Pressed" : "") + ".png"
+                autoRepeat: false
+                shortcut: "Left"
+                style: transparentToolButtonStyle
                 onClicked: playlist.previous()
-                Component.onCompleted: style = transparentToolButtonStyle
             }
             
             ToolButton {
                 iconSource: "/etc/hildon/theme/mediaplayer/" + (audioPlayer.playing ? "Pause" : "Play") + ".png"
+                autoRepeat: false
+                shortcut: "Space"
+                style: transparentToolButtonStyle
                 onClicked: if (audioPlayer.source) audioPlayer.playing = !audioPlayer.playing;
-                Component.onCompleted: style = transparentToolButtonStyle
             }
             
             ToolButton {
                 iconSource: "/etc/hildon/theme/mediaplayer/Forward" + (pressed ? "Pressed" : "") + ".png"
+                autoRepeat: false
+                shortcut: "Right"
+                style: transparentToolButtonStyle
                 onClicked: playlist.next()
-                Component.onCompleted: style = transparentToolButtonStyle
             }
             
             ToolButton {
@@ -407,8 +455,10 @@ Window {
                 iconSource: "/etc/hildon/theme/mediaplayer/Shuffle" + ((checked) || (pressed) ? "Pressed" : "") + ".png"
                 checkable: true
                 checked: playlist.shuffle
+                autoRepeat: false
+                shortcut: "e"
+                style: transparentToolButtonStyle
                 onClicked: playlist.shuffle = !playlist.shuffle
-                Component.onCompleted: style = transparentToolButtonStyle
             }
             
             ToolButton {
@@ -416,8 +466,10 @@ Window {
                 iconSource: "/etc/hildon/theme/mediaplayer/Repeat" + ((checked) || (pressed) ? "Pressed" : "") + ".png"
                 checkable: true
                 checked: playlist.repeat
+                autoRepeat: false
+                shortcut: "r"
+                style: transparentToolButtonStyle
                 onClicked: playlist.repeat = !playlist.repeat
-                Component.onCompleted: style = transparentToolButtonStyle
             }
         }
     }
