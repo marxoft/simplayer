@@ -1,3 +1,10 @@
+simplayer (0.1.0) unstable; urgency=low
+
+  * Add keyboard shortcuts for playback and shuffle/repeat.
+  * Add context menu for playlist view.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Sun, 27 Sep 2015 01:37:24 +0000
+
 simplayer (0.0.2) unstable; urgency=low
 
   * Update to use new Qt Components Hildon
