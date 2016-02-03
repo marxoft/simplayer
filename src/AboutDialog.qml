@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,7 +21,7 @@ Dialog {
     id: root
     
     title: qsTr("About")
-    maximumHeight: 180
+    height: column.height + platformStyle.paddingMedium
     
     Column {
         id: column
@@ -49,7 +49,7 @@ Dialog {
                 font.bold: true
                 font.pointSize: platformStyle.fontSizeLarge
                 verticalAlignment: Text.AlignVCenter
-                text: "SimPlayer 0.1.0"
+                text: "SimPlayer 0.1.1"
             }
         }
 
