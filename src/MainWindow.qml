@@ -23,10 +23,7 @@ import "Utils.js" as Utils
 
 Window {
     id: window
-    
-    property AboutDialog aboutDialog
-    property SettingsDialog settingsDialog
-    
+        
     visible: true
     title: (!Qt.application.active) && (audioPlayer.metaData.title) ? audioPlayer.metaData.title
                                                                     : "SimPlayer"
@@ -42,24 +39,12 @@ Window {
         
         MenuItem {
             text: qsTr("Settings")
-            onTriggered: {
-                if (!settingsDialog) {
-                    settingsDialog = settingsDialogComponent.createObject(window);
-                }
-                
-                settingsDialog.open();
-            }
+            onTriggered: popupManager.open(Qt.resolvedUrl("SettingsDialog.qml"), window)
         }
         
         MenuItem {
             text: qsTr("About")
-            onTriggered: {
-                if (!aboutDialog) {
-                    aboutDialog = aboutDialogComponent.createObject(window);
-                }
-                
-                aboutDialog.open();
-            }
+            onTriggered: popupManager.open(Qt.resolvedUrl("AboutDialog.qml"), window)
         }
     }
     
@@ -67,19 +52,16 @@ Window {
         id: openAction
         
         text: qsTr("Open directory")
-        shortcut: "Ctrl+O"
+        shortcut: qsTr("Ctrl+O")
         autoRepeat: false
-        onTriggered: {
-            fileDialog.folder = directory.path;
-            fileDialog.open();
-        }
+        onTriggered: popupManager.open(fileDialog, window)
     }
     
     Action {
         id: clearAction
         
         text: qsTr("Clear now playing")
-        shortcut: "Ctrl+X"
+        shortcut: qsTr("Ctrl+X")
         autoRepeat: false
         enabled: playlist.count > 0
         onTriggered: playlist.clearItems()
@@ -89,7 +71,7 @@ Window {
         id: viewAction
         
         text: qsTr("Toggle view")
-        shortcut: "Ctrl+L"
+        shortcut: qsTr("Ctrl+L")
         autoRepeat: false
         enabled: playlist.count > 0
         onTriggered: infoLoader.sourceComponent = (infoLoader.sourceComponent == infoColumn ? playlistView : infoColumn)
@@ -99,8 +81,7 @@ Window {
         id: audioPlayer
         
         tickInterval: (screen.covered) || (infoLoader.sourceComponent == playlistView) ? 0 
-                                                                                       : Qt.application.active ? 1000 
-                                                                                                               : 10000
+        : Qt.application.active ? 1000 : 10000
         onError: informationBox.information(errorString);
     }
     
@@ -110,14 +91,14 @@ Window {
         function loadSongs(folder) {
             var p = directory.path;
             directory.path = folder;
-            var songs = directory.entryList();
+            var songs = directory.recursiveEntryList();
             
             if (songs.length > 0) {
                 settings.currentFolder = folder;
                 clearItems();
                 
                 for (var i = 0; i < songs.length; i++) {
-                    appendSource(directory.absoluteFilePath(songs[i]));
+                    appendSource(songs[i]);
                 }
             }
             else {
@@ -143,6 +124,9 @@ Window {
         id: directory
         
         path: "/home/user/MyDocs"
+        filter: Directory.AllDirs | Directory.Files | Directory.NoDotAndDotDot | Directory.Readable
+        | Directory.NoSymLinks
+        sorting: Directory.DirsLast | Directory.IgnoreCase
         nameFilters: [ "*.mp3", "*.ogg", "*.flac", "*.wav", "*.m4a", "*.wma", "*.ape", "*.aiff" ]
     }
     
@@ -222,7 +206,8 @@ Window {
                 font.pointSize: platformStyle.fontSizeSmall
                 color: platformStyle.secondaryTextColor
                 elide: Text.ElideRight
-                text: playlist.count ? (playlist.position + 1) + "/" + playlist.count + " " + qsTr("songs") : qsTr("(no songs)")
+                text: playlist.count ? (playlist.position + 1) + "/" + playlist.count + " " + qsTr("songs")
+                : qsTr("(no songs)")
             }
             
             Label {
@@ -355,19 +340,21 @@ Window {
                 }
                 
                 onClicked: playlist.position = index
-                onPressAndHold: contextMenu.popup()
+                onPressAndHold: popupManager.open(contextMenu, view)
             }
             
-            Menu {
+            Component {
                 id: contextMenu
                 
-                MenuItem {
-                    text: qsTr("Delete from now playing")
-                    onTriggered: playlist.removeItem(view.currentIndex)
-                }
-                
-                MenuItem {
-                    action: clearAction
+                Menu {                    
+                    MenuItem {
+                        text: qsTr("Delete from now playing")
+                        onTriggered: playlist.removeItem(view.currentIndex)
+                    }
+                    
+                    MenuItem {
+                        action: clearAction
+                    }
                 }
             }
                                     
@@ -429,7 +416,7 @@ Window {
             ToolButton {
                 iconSource: "/etc/hildon/theme/mediaplayer/Back" + (pressed ? "Pressed" : "") + ".png"
                 autoRepeat: false
-                shortcut: "Left"
+                shortcut: qsTr("Left")
                 style: transparentToolButtonStyle
                 onClicked: playlist.previous()
             }
@@ -437,7 +424,7 @@ Window {
             ToolButton {
                 iconSource: "/etc/hildon/theme/mediaplayer/" + (audioPlayer.playing ? "Pause" : "Play") + ".png"
                 autoRepeat: false
-                shortcut: "Space"
+                shortcut: qsTr("Space")
                 style: transparentToolButtonStyle
                 onClicked: if (audioPlayer.source) audioPlayer.playing = !audioPlayer.playing;
             }
@@ -445,7 +432,7 @@ Window {
             ToolButton {
                 iconSource: "/etc/hildon/theme/mediaplayer/Forward" + (pressed ? "Pressed" : "") + ".png"
                 autoRepeat: false
-                shortcut: "Right"
+                shortcut: qsTr("Right")
                 style: transparentToolButtonStyle
                 onClicked: playlist.next()
             }
@@ -456,7 +443,7 @@ Window {
                 checkable: true
                 checked: playlist.shuffle
                 autoRepeat: false
-                shortcut: "e"
+                shortcut: qsTr("e")
                 style: transparentToolButtonStyle
                 onClicked: playlist.shuffle = !playlist.shuffle
             }
@@ -467,7 +454,7 @@ Window {
                 checkable: true
                 checked: playlist.repeat
                 autoRepeat: false
-                shortcut: "r"
+                shortcut: qsTr("r")
                 style: transparentToolButtonStyle
                 onClicked: playlist.repeat = !playlist.repeat
             }
@@ -503,24 +490,15 @@ Window {
             }
         }
     }
-
-    FileDialog {
+    
+    Component {
         id: fileDialog
         
-        selectFolder: true
-        onAccepted: playlist.loadSongs(folder)
-    }
-    
-    Component {
-        id: settingsDialogComponent
-        
-        SettingsDialog {}
-    }
-    
-    Component {
-        id: aboutDialogComponent
-        
-        AboutDialog {}
+        FileDialog {
+            selectFolder: true
+            folder: directory.path
+            onAccepted: playlist.loadSongs(folder)
+        }
     }
     
     InformationBox {
