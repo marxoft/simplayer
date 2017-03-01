@@ -49,7 +49,7 @@ Dialog {
                 font.bold: true
                 font.pointSize: platformStyle.fontSizeLarge
                 verticalAlignment: Text.AlignVCenter
-                text: "SimPlayer 0.1.1"
+                text: "SimPlayer 0.2.0"
             }
         }
 
@@ -57,7 +57,7 @@ Dialog {
             width: parent.width
             wrapMode: Text.WordWrap
             text: qsTr("A simple folder-based music player written using")
-                  + " Qt Components Hildon.<br><br>&copy; Stuart Howarth 2015"
+                  + " Qt Components Hildon.<br><br>&copy; Stuart Howarth 2015-2017"
         }
     }
 }
