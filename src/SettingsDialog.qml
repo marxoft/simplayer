@@ -37,7 +37,29 @@ Dialog {
             
             width: parent.width - acceptButton.width - parent.spacing
             text: qsTr("Startup playlist")
-            pickSelector: playlistSelector
+            pickSelector: ListPickSelector {
+                id: playlistSelector
+                
+                textRole: "name"
+                model: ListModel {
+                    ListElement {
+                        name: "Current folder"
+                        value: "folder"
+                    }
+                    
+                    ListElement {
+                        name: "MAFW playlist"
+                        value: "mafw"
+                    }
+                    
+                    ListElement {
+                        name: "None"
+                        value: ""
+                    }
+                }
+                
+                onSelected: settings.startupPlaylist = model.get(currentIndex).value
+            }
         }
         
         Button {
@@ -48,28 +70,4 @@ Dialog {
             onClicked: root.accept()
         }
     }
-    
-    ListPickSelector {
-        id: playlistSelector
-        
-        textRole: "name"
-        model: ListModel {
-            ListElement {
-                name: "Current folder"
-                value: "folder"
-            }
-            
-            ListElement {
-                name: "MAFW playlist"
-                value: "mafw"
-            }
-            
-            ListElement {
-                name: "None"
-                value: ""
-            }
-        }
-        
-        onSelected: settings.startupPlaylist = model.get(currentIndex).value
-    }    
 }
