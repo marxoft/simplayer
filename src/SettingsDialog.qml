@@ -21,53 +21,106 @@ Dialog {
     id: root
     
     title: qsTr("Settings")
+    height: column.height + platformStyle.paddingMedium
     
-    Row {
-        id: row
+    Column {
+        id: column
         
         anchors {
             left: parent.left
-            right: parent.right
-            bottom: parent.bottom
+            right: acceptButton.left
+            rightMargin: platformStyle.paddingMedium
+            top: parent.top
         }
         spacing: platformStyle.paddingMedium
         
-        ValueButton {
+        ListSelectorButton {
             id: playlistButton
             
-            width: parent.width - acceptButton.width - parent.spacing
+            width: parent.width
             text: qsTr("Startup playlist")
-            pickSelector: ListPickSelector {
-                id: playlistSelector
-                
-                textRole: "name"
-                model: ListModel {
-                    ListElement {
-                        name: "Current folder"
-                        value: "folder"
-                    }
-                    
-                    ListElement {
-                        name: "MAFW playlist"
-                        value: "mafw"
-                    }
-                    
-                    ListElement {
-                        name: "None"
-                        value: ""
-                    }
+            model: ListModel {
+                ListElement {
+                    name: "Current folder"
+                    value: "folder"
                 }
                 
-                onSelected: settings.startupPlaylist = model.get(currentIndex).value
+                ListElement {
+                    name: "MAFW playlist"
+                    value: "mafw"
+                }
+                
+                ListElement {
+                    name: "None"
+                    value: ""
+                }
             }
+
+            value: settings.startupPlaylist
+            onSelected: settings.startupPlaylist = value
         }
+
+        ListSelectorButton {
+            id: orientationButton
+
+            width: parent.width
+            text: qsTr("Screen orientation")
+            model: ListModel {
+                ListElement {
+                    name: "Landscape"
+                    value: 129 // Qt.WA_Maemo5LandscapeOrientation
+                }
+
+                ListElement {
+                    name: "Portrait"
+                    value: 128 // Qt.WA_Maemo5PortraitOrientation
+                }
+
+                ListElement {
+                    name: "Automatic"
+                    value: 130 // Qt.WA_Maemo5AutoOrientation
+                }
+            }
+
+            value: settings.screenOrientation
+            onSelected: settings.screenOrientation = value
+        }
+    }
         
-        Button {
-            id: acceptButton
-            
-            text: qsTr("Done")
-            style: DialogButtonStyle {}
-            onClicked: root.accept()
+    Button {
+        id: acceptButton
+
+        anchors {
+            right: parent.right
+            bottom: parent.bottom
+        }
+        text: qsTr("Done")
+        style: DialogButtonStyle {}
+        onClicked: root.accept()
+    }
+
+    contentItem.states: State {
+        name: "Portrait"
+        when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
+
+        AnchorChanges {
+            target: column
+            anchors.right: parent.right
+        }
+
+        PropertyChanges {
+            target: column
+            anchors.rightMargin: 0
+        }
+
+        PropertyChanges {
+            target: acceptButton
+            width: parent.width
+        }
+
+        PropertyChanges {
+            target: root
+            height: column.height + acceptButton.height + platformStyle.paddingMedium
         }
     }
 }

@@ -74,7 +74,8 @@ Window {
         shortcut: qsTr("Ctrl+L")
         autoRepeat: false
         enabled: playlist.count > 0
-        onTriggered: infoLoader.sourceComponent = (infoLoader.sourceComponent == infoColumn ? playlistView : infoColumn)
+        onTriggered: infoLoader.sourceComponent =
+        (infoLoader.sourceComponent == infoColumn ? playlistView : infoColumn)
     }
     
     Audio {
@@ -135,8 +136,10 @@ Window {
         
         property string currentFolder
         property string startupPlaylist
+        property int screenOrientation: Qt.WA_Maemo5LandscapeOrientation
         
         fileName: "/home/user/.config/SimPlayer/simplayer.conf"
+        onScreenOrientationChanged: screen.orientationLock = screenOrientation
     }
     
     Image {
@@ -191,6 +194,8 @@ Window {
         id: infoColumn
         
         Column {
+            id: column
+
             anchors {
                 fill: parent
                 leftMargin: platformStyle.paddingLarge * 2
@@ -273,6 +278,18 @@ Window {
                 color: platformStyle.secondaryTextColor
                 elide: Text.ElideRight
                 text: audioPlayer.metaData.albumTitle ? audioPlayer.metaData.albumTitle : qsTr("(unknown album)")
+            }
+
+            states: State {
+                name: "Portrait"
+                when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
+
+                PropertyChanges {
+                    target: column
+                    anchors.leftMargin: platformStyle.paddingLarge
+                    anchors.rightMargin: platformStyle.paddingLarge
+                    anchors.topMargin: platformStyle.paddingLarge * 2
+                }
             }
         }
     }
@@ -362,6 +379,17 @@ Window {
                 target: playlist
                 onPositionChanged: currentIndex = playlist.position
             }
+
+            states: State {
+                name: "Portrait"
+                when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
+
+                PropertyChanges {
+                    target: view
+                    anchors.leftMargin: 0
+                    anchors.topMargin: platformStyle.paddingLarge * 2
+                }
+            }
             
             Component.onCompleted: {
                 currentIndex = playlist.position;
@@ -411,9 +439,13 @@ Window {
         id: playbackControls
         
         Row {
+            id: row
+
             spacing: 42
             
             ToolButton {
+                id: previousButton
+
                 iconSource: "/etc/hildon/theme/mediaplayer/Back" + (pressed ? "Pressed" : "") + ".png"
                 autoRepeat: false
                 shortcut: qsTr("Left")
@@ -422,6 +454,8 @@ Window {
             }
             
             ToolButton {
+                id: playButton
+
                 iconSource: "/etc/hildon/theme/mediaplayer/" + (audioPlayer.playing ? "Pause" : "Play") + ".png"
                 autoRepeat: false
                 shortcut: qsTr("Space")
@@ -430,6 +464,8 @@ Window {
             }
             
             ToolButton {
+                id: nextButton
+
                 iconSource: "/etc/hildon/theme/mediaplayer/Forward" + (pressed ? "Pressed" : "") + ".png"
                 autoRepeat: false
                 shortcut: qsTr("Right")
@@ -438,6 +474,8 @@ Window {
             }
             
             ToolButton {
+                id: shuffleButton
+
                 width: 130
                 iconSource: "/etc/hildon/theme/mediaplayer/Shuffle" + ((checked) || (pressed) ? "Pressed" : "") + ".png"
                 checkable: true
@@ -449,6 +487,8 @@ Window {
             }
             
             ToolButton {
+                id: repeatButton
+
                 width: 130
                 iconSource: "/etc/hildon/theme/mediaplayer/Repeat" + ((checked) || (pressed) ? "Pressed" : "") + ".png"
                 checkable: true
@@ -457,6 +497,26 @@ Window {
                 shortcut: qsTr("r")
                 style: transparentToolButtonStyle
                 onClicked: playlist.repeat = !playlist.repeat
+            }
+
+            states: State {
+                name: "Portrait"
+                when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
+
+                PropertyChanges {
+                    target: row
+                    spacing: 12
+                }
+
+                PropertyChanges {
+                    target: shuffleButton
+                    width: 70
+                }
+
+                PropertyChanges {
+                    target: repeatButton
+                    width: 70
+                }
             }
         }
     }
@@ -488,6 +548,16 @@ Window {
             
                 Component.onCompleted: value = audioPlayer.volume
             }
+
+            states: State {
+                name: "Portrait"
+                when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
+
+                PropertyChanges {
+                    target: vSlider
+                    anchors.leftMargin: platformStyle.paddingLarge
+                }
+            }
         }
     }
     
@@ -508,7 +578,7 @@ Window {
         
         function information(message) {
             infoLabel.text = message;
-            open();
+            show();
         }
         
         Label {
@@ -523,6 +593,33 @@ Window {
             verticalAlignment: Text.AlignVCenter
             color: platformStyle.reversedTextColor
             wrapMode: Text.WordWrap
+        }
+    }
+
+    contentItem.states: State {
+        name: "Portrait"
+        when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
+
+        AnchorChanges {
+            target: image
+            anchors.left: undefined
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+
+        AnchorChanges {
+            target: infoLoader
+            anchors.left: parent.left
+            anchors.top: image.bottom
+        }
+
+        AnchorChanges {
+            target: toolsLoader
+            anchors.left: parent.left
+        }
+
+        PropertyChanges {
+            target: volumeButton
+            anchors.rightMargin: 0
         }
     }
 }

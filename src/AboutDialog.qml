@@ -49,7 +49,7 @@ Dialog {
                 font.bold: true
                 font.pointSize: platformStyle.fontSizeLarge
                 verticalAlignment: Text.AlignVCenter
-                text: "SimPlayer 0.2.0"
+                text: "SimPlayer 0.3.0"
             }
         }
 
