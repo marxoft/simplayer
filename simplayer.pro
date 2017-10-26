@@ -12,4 +12,7 @@ qml.path = /opt/simplayer/qml
 desktop.files = desktop/simplayer.desktop
 desktop.path = /usr/share/applications/hildon
 
-INSTALLS += qml desktop
+launcher.files = src/simplayer
+launcher.path = /usr/bin
+
+INSTALLS += qml desktop launcher

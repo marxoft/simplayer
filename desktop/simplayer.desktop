@@ -2,5 +2,4 @@
 Type=Application
 Name=SimPlayer
 Icon=mediaplayer_default_album
-Exec=/opt/qt-components-hildon-viewer/bin/viewer /opt/simplayer/qml/MainWindow.qml
-
+Exec=simplayer

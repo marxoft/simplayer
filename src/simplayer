@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -e
+qchviewer /opt/simplayer/qml/MainWindow.qml
+exit 0
