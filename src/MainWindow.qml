@@ -22,7 +22,7 @@ import org.hildon.utils 1.0
 import "SimPlayer.js" as SimPlayer
 import "Utils.js" as Utils
 
-Window {
+ApplicationWindow {
     id: window
         
     visible: true
@@ -31,7 +31,7 @@ Window {
     
     menuBar: MenuBar {
         MenuItem {
-            action: openAction
+            action: browseAction
         }
         
         MenuItem {
@@ -50,12 +50,12 @@ Window {
     }
     
     Action {
-        id: openAction
+        id: browseAction
         
-        text: qsTr("Open directory")
+        text: qsTr("Browse music")
         shortcut: qsTr("Ctrl+O")
         autoRepeat: false
-        onTriggered: popupManager.open(fileDialog, window)
+        onTriggered: windowStack.push(Qt.resolvedUrl("BrowserWindow.qml"))
     }
     
     Action {
@@ -80,9 +80,35 @@ Window {
     }
 
     Action {
+        id: playAction
+
+        shortcut: qsTr("Space")
+        shortcutContext: Qt.ApplicationShortcut
+        autoRepeat: false
+        onTriggered: if (audioPlayer.source) audioPlayer.playing = !audioPlayer.playing;
+    }
+
+    Action {
+        id: nextAction
+
+        shortcut: qsTr("Right")
+        shortcutContext: Qt.ApplicationShortcut
+        autoRepeat: false
+        onTriggered: playlist.next()
+    }
+
+    Action {
+        id: previousAction
+
+        shortcut: qsTr("Left")
+        shortcutContext: Qt.ApplicationShortcut
+        autoRepeat: false
+        onTriggered: playlist.previous()
+    }
+
+    Action {
         id: volumeKeysNextAction
 
-        text: qsTr("Next")
         shortcut: qsTr("F7")
         shortcutContext: Qt.ApplicationShortcut
         autoRepeat: false
@@ -92,7 +118,6 @@ Window {
     Action {
         id: volumeKeysPreviousAction
 
-        text: qsTr("Previous")
         shortcut: qsTr("F8")
         shortcutContext: Qt.ApplicationShortcut
         autoRepeat: false
@@ -110,23 +135,47 @@ Window {
     NowPlayingModel {
         id: playlist
         
-        function loadSongs(folder) {
+        function loadSongs(folder, clear) {
             var p = directory.path;
             directory.path = folder;
             var songs = directory.recursiveEntryList();
             
             if (songs.length > 0) {
                 settings.currentFolder = folder;
-                clearItems();
+
+                if (clear) {
+                    clearItems();
+                }
                 
                 for (var i = 0; i < songs.length; i++) {
                     appendSource(songs[i]);
                 }
+
+                informationBox.information(songs.length + " " + qsTr("songs added"));
             }
             else {
                 directory.path = p;
                 informationBox.information(qsTr("No songs found"));
             }
+        }
+
+        function playSongs(folder) {
+            loadSongs(folder, true);
+            audioPlayer.play();
+        }
+
+        function loadSong(uri, clear) {
+            if (clear) {
+                clearItems();
+            }
+
+            appendSource(uri);
+            informationBox.information(qsTr("Song added"));
+        }
+
+        function playSong(uri) {
+            loadSong(uri, true);
+            audioPlayer.play();
         }
         
         onCountChanged: if (count == 0) infoLoader.sourceComponent = infoColumn;
@@ -136,7 +185,7 @@ Window {
                     loadItems();
                     break;
                 case SimPlayer.FolderPlaylist:
-                    loadSongs(settings.currentFolder);
+                    loadSongs(settings.currentFolder, true);
                     break;
                 default:
                     break;
@@ -151,7 +200,7 @@ Window {
         filter: Directory.AllDirs | Directory.Files | Directory.NoDotAndDotDot | Directory.Readable
         | Directory.NoSymLinks
         sorting: Directory.DirsLast | Directory.IgnoreCase
-        nameFilters: [ "*.mp3", "*.ogg", "*.flac", "*.wav", "*.m4a", "*.wma", "*.ape", "*.aiff" ]
+        nameFilters: SimPlayer.AUDIO_FILENAME_FILTERS
     }
     
     Settings {
@@ -169,13 +218,11 @@ Window {
     Image {
         id: image
         
-        property variant covers: [ "cover.jpg", "folder.jpg", "front.jpg" ]
-        
         function backupCoverArt() {
             if (playlist.count > 0) {
-                for (var i = 0; i < covers.length; i++) { 
-                    if (directory.fileExists(covers[i])) {
-                        return directory.path + "/" + covers[i];
+                for (var i = 0; i < SimPlayer.COVER_FILENAMES.length; i++) { 
+                    if (directory.fileExists(SimPlayer.COVER_FILENAMES[i])) {
+                        return directory.path + "/" + SimPlayer.COVER_FILENAMES[i];
                     }
                 }
             }
@@ -470,31 +517,25 @@ Window {
             ToolButton {
                 id: previousButton
 
+                action: previousAction
                 iconSource: "/etc/hildon/theme/mediaplayer/Back" + (pressed ? "Pressed" : "") + ".png"
-                autoRepeat: false
-                shortcut: qsTr("Left")
                 style: transparentToolButtonStyle
-                onClicked: playlist.previous()
             }
             
             ToolButton {
                 id: playButton
 
+                action: playAction
                 iconSource: "/etc/hildon/theme/mediaplayer/" + (audioPlayer.playing ? "Pause" : "Play") + ".png"
-                autoRepeat: false
-                shortcut: qsTr("Space")
                 style: transparentToolButtonStyle
-                onClicked: if (audioPlayer.source) audioPlayer.playing = !audioPlayer.playing;
             }
             
             ToolButton {
                 id: nextButton
 
+                action: nextAction
                 iconSource: "/etc/hildon/theme/mediaplayer/Forward" + (pressed ? "Pressed" : "") + ".png"
-                autoRepeat: false
-                shortcut: qsTr("Right")
                 style: transparentToolButtonStyle
-                onClicked: playlist.next()
             }
             
             ToolButton {
@@ -582,16 +623,6 @@ Window {
                     anchors.leftMargin: platformStyle.paddingLarge
                 }
             }
-        }
-    }
-    
-    Component {
-        id: fileDialog
-        
-        FileDialog {
-            selectFolder: true
-            folder: directory.path
-            onAccepted: playlist.loadSongs(folder)
         }
     }
     

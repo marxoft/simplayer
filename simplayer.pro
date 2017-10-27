@@ -2,6 +2,8 @@ TEMPLATE = subdirs
 
 qml.files = \
     src/AboutDialog.qml \
+    src/BrowserWindow.qml \
+    src/FilterBar.qml \
     src/ListSelectorButton.qml \
     src/MainWindow.qml \
     src/SettingsDialog.qml \

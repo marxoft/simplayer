@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2017 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -14,22 +14,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-.pragma library
+import QtQuick 1.0
+import org.hildon.components 1.0
 
-// Enums
+ToolBar {
+    id: root
 
-// Playlist
-var FolderPlaylist = "folder";
-var MafwPlaylist = "mafw";
-var NoPlaylist = "";
+    property alias text: textField.text
 
-// Volume keys policy
-var VolumeKeysChangeVolume = 0;
-var VolumeKeysNavigate = 1;
-var VolumeKeysNavigateWhenPlayerIsHidden = 2;
+    signal rejected
 
+    function forceActiveFocus() {
+        textField.forceActiveFocus();
+    }
 
-// Defines
+    spacing: platformStyle.paddingMedium
+    alignment: Qt.AlignHCenter | Qt.AlignTop
 
-var AUDIO_FILENAME_FILTERS = ["*.mp3", "*.ogg", "*.flac", "*.wav", "*.m4a", "*.wma", "*.ape", "*.aiff"];
-var COVER_FILENAMES = ["cover.jpg", "folder.jpg", "front.jpg"];
+    TextField {
+        id: textField
+
+        width: root.width - button.width - platformStyle.paddingMedium * 3
+        onTextChanged: if (!text) root.rejected();
+    }
+
+    ToolButton {
+        id: button
+
+        iconName: "general_close"
+        activeFocusOnPress: false
+        onClicked: textField.clear()
+    }
+}
