@@ -39,13 +39,11 @@ ApplicationWindow {
         }
         
         MenuItem {
-            text: qsTr("Settings")
-            onTriggered: popupManager.open(Qt.resolvedUrl("SettingsDialog.qml"), window)
+            action: settingsAction
         }
         
         MenuItem {
-            text: qsTr("About")
-            onTriggered: popupManager.open(Qt.resolvedUrl("AboutDialog.qml"), window)
+            action: aboutAction
         }
     }
     
@@ -66,6 +64,24 @@ ApplicationWindow {
         autoRepeat: false
         enabled: playlist.count > 0
         onTriggered: playlist.clearItems()
+    }
+
+    Action {
+        id: settingsAction
+
+        text: qsTr("Settings")
+        shortcut: qsTr("Ctrl+S")
+        autoRepeat: false
+        onTriggered: popupManager.open(Qt.resolvedUrl("SettingsDialog.qml"), window)
+    }
+
+    Action {
+        id: aboutAction
+
+        text: qsTr("About")
+        shortcut: qsTr("Ctrl+H")
+        autoRepeat: false
+        onTriggered: popupManager.open(Qt.resolvedUrl("AboutDialog.qml"), window)
     }
     
     Action {
