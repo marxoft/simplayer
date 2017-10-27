@@ -19,6 +19,7 @@ import org.hildon.components 1.0
 import org.hildon.multimedia 1.0
 import org.hildon.settings 1.0
 import org.hildon.utils 1.0
+import "SimPlayer.js" as SimPlayer
 import "Utils.js" as Utils
 
 Window {
@@ -77,6 +78,26 @@ Window {
         onTriggered: infoLoader.sourceComponent =
         (infoLoader.sourceComponent == infoColumn ? playlistView : infoColumn)
     }
+
+    Action {
+        id: volumeKeysNextAction
+
+        text: qsTr("Next")
+        shortcut: qsTr("F7")
+        shortcutContext: Qt.ApplicationShortcut
+        autoRepeat: false
+        onTriggered: playlist.next()
+    }
+
+    Action {
+        id: volumeKeysPreviousAction
+
+        text: qsTr("Previous")
+        shortcut: qsTr("F8")
+        shortcutContext: Qt.ApplicationShortcut
+        autoRepeat: false
+        onTriggered: playlist.previous()
+    }
     
     Audio {
         id: audioPlayer
@@ -110,13 +131,15 @@ Window {
         
         onCountChanged: if (count == 0) infoLoader.sourceComponent = infoColumn;
         onReady: {
-            if (settings.startupPlaylist) {
-                if (settings.startupPlaylist == "mafw") {
+            switch (settings.startupPlaylist) {
+                case SimPlayer.MafwPlaylist:
                     loadItems();
-                }
-                else if (settings.currentFolder) {
+                    break;
+                case SimPlayer.FolderPlaylist:
                     loadSongs(settings.currentFolder);
-                }
+                    break;
+                default:
+                    break;
             }
         }
     }
@@ -135,8 +158,9 @@ Window {
         id: settings
         
         property string currentFolder
-        property string startupPlaylist
+        property string startupPlaylist: SimPlayer.NoPlaylist
         property int screenOrientation: Qt.WA_Maemo5LandscapeOrientation
+        property int volumeKeysPolicy: SimPlayer.VolumeKeysChangeVolume
         
         fileName: "/home/user/.config/SimPlayer/simplayer.conf"
         onScreenOrientationChanged: screen.orientationLock = screenOrientation
@@ -595,6 +619,8 @@ Window {
             wrapMode: Text.WordWrap
         }
     }
+
+    VolumeKeys.enabled: settings.volumeKeysPolicy == SimPlayer.VolumeKeysNavigate
 
     contentItem.states: State {
         name: "Portrait"

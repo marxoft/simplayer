@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2017 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,21 +16,12 @@
 
 .pragma library
 
-function formatSeconds(seconds) {
-    if (seconds <= 0) {
-        return "00:00";
-    }
-    
-    var m = Math.floor(seconds / 60);
-    var s = seconds % 60;
-    
-    if (m < 10) {
-        m = "0" + m;
-    }
-    
-    if (s < 10) {
-        s = "0" + s;
-    }
-    
-    return m + ":" + s;
-}
+// Playlist
+var FolderPlaylist = "folder";
+var MafwPlaylist = "mafw";
+var NoPlaylist = "";
+
+// Volume keys policy
+var VolumeKeysChangeVolume = 0;
+var VolumeKeysNavigate = 1;
+var VolumeKeysNavigateWhenPlayerIsHidden = 2;

@@ -5,6 +5,7 @@ qml.files = \
     src/ListSelectorButton.qml \
     src/MainWindow.qml \
     src/SettingsDialog.qml \
+    src/SimPlayer.js \
     src/Utils.js
     
 qml.path = /opt/simplayer/qml

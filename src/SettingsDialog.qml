@@ -42,22 +42,43 @@ Dialog {
             model: ListModel {
                 ListElement {
                     name: "Current folder"
-                    value: "folder"
+                    value: "folder" // SimPlayer.FolderPlaylist
                 }
                 
                 ListElement {
                     name: "MAFW playlist"
-                    value: "mafw"
+                    value: "mafw" // SimPlayer.MafwPlaylist
                 }
                 
                 ListElement {
                     name: "None"
-                    value: ""
+                    value: "" // SimPlayer.NoPlaylist
                 }
             }
 
             value: settings.startupPlaylist
             onSelected: settings.startupPlaylist = value
+        }
+
+        ListSelectorButton {
+            id: volumeKeysButton
+
+            width: parent.width
+            text: qsTr("Volume keys policy")
+            model: ListModel {
+                ListElement {
+                    name: "Change volume"
+                    value: 0 // SimPlayer.VolumeKeysChangeVolume
+                }
+
+                ListElement {
+                    name: "Change songs"
+                    value: 1 // SimPlayer.VolumeKeysNavigate
+                }
+            }
+
+            value: settings.volumeKeysPolicy
+            onSelected: settings.volumeKeysPolicy = value
         }
 
         ListSelectorButton {
@@ -120,7 +141,7 @@ Dialog {
 
         PropertyChanges {
             target: root
-            height: column.height + acceptButton.height + platformStyle.paddingMedium
+            height: column.height + acceptButton.height + platformStyle.paddingMedium * 2
         }
     }
 }
