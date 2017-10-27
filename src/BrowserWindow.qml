@@ -153,7 +153,7 @@ Window {
         anchors.centerIn: parent
         font.pointSize: platformStyle.fontSizeLarge
         color: platformStyle.disabledTextColor
-        text: qsTr("No files")
+        text: qsTr("No music")
         visible: (filterModel.count == 0) && (directory.ready)
     }
 
