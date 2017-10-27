@@ -33,3 +33,4 @@ var VolumeKeysNavigateWhenPlayerIsHidden = 2;
 
 var AUDIO_FILENAME_FILTERS = ["*.mp3", "*.ogg", "*.flac", "*.wav", "*.m4a", "*.wma", "*.ape", "*.aiff"];
 var COVER_FILENAMES = ["cover.jpg", "folder.jpg", "front.jpg"];
+var VERSION_NUMBER = "0.3.0";
