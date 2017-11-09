@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@ Dialog {
     id: root
     
     title: qsTr("Settings")
-    height: column.height + platformStyle.paddingMedium
+    height: Math.min(360, column.height + platformStyle.paddingMedium)
     
     Column {
         id: column
@@ -33,57 +33,23 @@ Dialog {
             top: parent.top
         }
         spacing: platformStyle.paddingMedium
-        
-        ListSelectorButton {
-            id: playlistButton
-            
-            width: parent.width
-            text: qsTr("Startup playlist")
-            model: ListModel {
-                ListElement {
-                    name: "Current folder"
-                    value: "folder" // SimPlayer.FolderPlaylist
-                }
-                
-                ListElement {
-                    name: "MAFW playlist"
-                    value: "mafw" // SimPlayer.MafwPlaylist
-                }
-                
-                ListElement {
-                    name: "None"
-                    value: "" // SimPlayer.NoPlaylist
-                }
-            }
 
-            value: settings.startupPlaylist
-            onSelected: settings.startupPlaylist = value
+        Label {
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
+            color: platformStyle.secondaryTextColor
+            text: qsTr("General")
+        }
+
+        CheckBox {
+            width: parent.width
+            text: qsTr("Restore now playing on startup")
+            checked: settings.restorePlaylist
+            onCheckedChanged: settings.restorePlaylist = checked
         }
 
         ListSelectorButton {
-            id: volumeKeysButton
-
-            width: parent.width
-            text: qsTr("Volume keys policy")
-            model: ListModel {
-                ListElement {
-                    name: "Change volume"
-                    value: 0 // SimPlayer.VolumeKeysChangeVolume
-                }
-
-                ListElement {
-                    name: "Change songs"
-                    value: 1 // SimPlayer.VolumeKeysNavigate
-                }
-            }
-
-            value: settings.volumeKeysPolicy
-            onSelected: settings.volumeKeysPolicy = value
-        }
-
-        ListSelectorButton {
-            id: orientationButton
-
             width: parent.width
             text: qsTr("Screen orientation")
             model: ListModel {
@@ -105,6 +71,34 @@ Dialog {
 
             value: settings.screenOrientation
             onSelected: settings.screenOrientation = value
+        }
+
+        Label {
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
+            color: platformStyle.secondaryTextColor
+            text: qsTr("Plugins")
+        }
+
+        Button {
+            width: parent.width
+            text: qsTr("Search plugins")
+            enabled: pluginManager.searchPlugins.length > 0
+            onClicked: {
+                var dialog = popupManager.open(Qt.resolvedUrl("SearchPluginsDialog.qml"), root);
+                dialog.accepted.connect(function() {
+                    var plugin = pluginManager.searchPlugins[dialog.currentIndex];
+
+                    if (plugin.settings) {
+                        popupManager.open(Qt.resolvedUrl("PluginSettingsDialog.qml"), root,
+                        {pluginSettings: plugin.settings});
+                    }
+                    else {
+                        informationBox.information(qsTr("No settings for this plugin"));
+                    }
+                });
+            }
         }
     }
         
@@ -141,7 +135,7 @@ Dialog {
 
         PropertyChanges {
             target: root
-            height: column.height + acceptButton.height + platformStyle.paddingMedium * 2
+            height: Math.min(680, column.height + acceptButton.height + platformStyle.paddingMedium * 2)
         }
     }
 }

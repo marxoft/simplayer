@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+
+if [ -h /usr/lib/qt4/imports/SimPlayer ]
+    then
+        rm /usr/lib/qt4/imports/SimPlayer
+fi
+
+exit 0

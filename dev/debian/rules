@@ -32,18 +32,10 @@ install: build
 	dh_testroot
 	dh_clean -k 
 	dh_installdirs
-	# Create QML directory
-	mkdir -p debian/simplayer/opt/simplayer/qml
+	# Create QML module directory
+	mkdir -p debian/simplayer-dev/opt/lib/qt4/imports/SimPlayer
 	# Copy QML
-	cp app/src/*.qml app/src/*.js debian/simplayer/opt/simplayer/qml
-	# Create launcher directory
-	mkdir -p debian/simplayer/usr/bin/
-	# Copy launcher
-	cp app/src/simplayer debian/simplayer/usr/bin/
-	# Create desktop directory
-	mkdir -p debian/simplayer/usr/share/applications/hildon/
-	# Copy desktop
-	cp app/desktop/simplayer.desktop debian/simplayer/usr/share/applications/hildon
+	cp src/*.qml src/*.js src/qmldir debian/simplayer-dev/opt/lib/qt4/imports/SimPlayer
 
 # Build architecture-independent files here.
 binary-indep: build install

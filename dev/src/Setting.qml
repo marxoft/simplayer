@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2017 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -14,23 +14,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-.pragma library
+import QtQuick 1.0
+import org.hildon.components 1.0
+import "Setting.js" as Setting
 
-// Enums
+/**
+ * \class Setting
+ *
+ * The base class for an individual setting.
+ *
+ * \sa Settings
+ */
+Object {
+    /**
+     * \internal
+     *
+     * The setting type.
+     */
+    property int type: Setting.Other
 
-// Playlist
-var FolderPlaylist = "folder";
-var MafwPlaylist = "mafw";
-var NoPlaylist = "";
+    /**
+     * Whether the setting is enabled.
+     */
+    property bool enabled: true
 
-// Volume keys policy
-var VolumeKeysChangeVolume = 0;
-var VolumeKeysNavigate = 1;
-var VolumeKeysNavigateWhenPlayerIsHidden = 2;
-
-
-// Defines
-
-var AUDIO_FILENAME_FILTERS = ["*.mp3", "*.ogg", "*.flac", "*.wav", "*.m4a", "*.wma", "*.ape", "*.aiff"];
-var COVER_FILENAMES = ["cover.jpg", "folder.jpg", "front.jpg"];
-var VERSION_NUMBER = "0.3.0";
+    /**
+     * The label of the setting.
+     */
+    property string label
+}

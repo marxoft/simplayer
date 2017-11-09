@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -94,6 +94,8 @@ Dialog {
                 + qsTr("Other")
                 + ":<ul><li>"
                 + qsTr("Ctrl+L: Toggle playlist view.")
+                + "</li><li>"
+                + qsTr("Ctrl+F: Search for music using plugins.")
                 + "</li><li>"
                 + qsTr("Ctrl+S: Show settings dialog.")
                 + "</li><li>"

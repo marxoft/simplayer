@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2017 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -25,30 +25,36 @@ Window {
     title: qsTr("Browse music")
     menuBar: MenuBar {
         MenuItem {
-            action: queueAction
+            PlaybackButton {
+                onClicked: windowStack.pop(window)
+            }
         }
 
         MenuItem {
-            action: playAction
+            action: queueFolderAction
+        }
+
+        MenuItem {
+            action: playFolderAction
         }
     }
 
     Action {
-        id: queueAction
+        id: queueFolderAction
 
         text: qsTr("Enqueue folder")
         shortcut: qsTr("Ctrl+E")
         autoRepeat: false
-        onTriggered: playlist.loadSongs(directory.path)
+        onTriggered: playlist.addFolder(directory.path)
     }
 
     Action {
-        id: playAction
+        id: playFolderAction
 
         text: qsTr("Play folder")
         shortcut: qsTr("Ctrl+P")
         autoRepeat: false
-        onTriggered: playlist.playSongs(directory.path)
+        onTriggered: playlist.playFolder(directory.path)
     }
 
     Row {
@@ -106,7 +112,6 @@ Window {
             }
             filterRole: "name"
             filterCaseSensitivity: Qt.CaseInsensitive
-            dynamicSortFilter: true
         }
         delegate: ListItem {
             Image {
@@ -136,14 +141,14 @@ Window {
                 text: name
             }
 
-            onClicked: isDir ? directory.path = path : playlist.playSong(path)
+            onClicked: isDir ? directory.path = path : playlist.playUri(path)
             onPressAndHold: popupManager.open(contextMenu, root)
         }
 
         Keys.onPressed: {
             if (event.text) {
                 filterLoader.sourceComponent = filterBar;
-                filterLoader.item.text = event.text;
+                filterLoader.item.text += event.text;
                 event.accepted = true;
             }
         }
@@ -188,10 +193,10 @@ Window {
                     var file = fileModel.get(view.currentIndex);
                     
                     if (file.isDir) {
-                        playlist.loadSongs(file.path);
+                        playlist.addFolder(file.path);
                     }
                     else {
-                        playlist.loadSong(file.path);
+                        playlist.addUri(file.path);
                     }
                 }
             }
@@ -202,10 +207,10 @@ Window {
                     var file = fileModel.get(view.currentIndex);
                     
                     if (file.isDir) {
-                        playlist.playSongs(file.path);
+                        playlist.playFolder(file.path);
                     }
                     else {
-                        playlist.playSong(file.path);
+                        playlist.playUri(file.path);
                     }
                 }
             }
@@ -219,7 +224,7 @@ Window {
         
         filter: Directory.AllDirs | Directory.Files | Directory.NoDotAndDotDot | Directory.Readable
         | Directory.NoSymLinks
-        sorting: Directory.DirsFirst | Directory.IgnoreCase
+        sorting: Directory.DirsFirst | Directory.Name | Directory.IgnoreCase
         nameFilters: SimPlayer.AUDIO_FILENAME_FILTERS
         onPathChanged: {
             ready = false;
@@ -228,14 +233,13 @@ Window {
 
             for (var i = 0; i < files.length; i++) {
                 var file = files[i];
-                fileModel.append({name: file.completeBaseName, path: file.absoluteFilePath, isDir: file.isDir});
+                fileModel.append({name: file.fileName, path: file.absoluteFilePath, isDir: file.isDir});
             }
 
             ready = true;
+            settings.currentFolder = path;
         }
     }
-
-    VolumeKeys.enabled: settings.volumeKeysPolicy == SimPlayer.VolumeKeysNavigate
 
     contentItem.states: State {
         name: "Filter"
@@ -247,5 +251,5 @@ Window {
         }
     }
 
-    Component.onCompleted: directory.cd("/home/user/MyDocs")
+    Component.onCompleted: directory.cd(settings.currentFolder)
 }

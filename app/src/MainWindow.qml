@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -33,6 +33,10 @@ ApplicationWindow {
         MenuItem {
             action: browseAction
         }
+
+        MenuItem {
+            action: searchAction
+        }
         
         MenuItem {
             action: clearAction
@@ -53,7 +57,17 @@ ApplicationWindow {
         text: qsTr("Browse music")
         shortcut: qsTr("Ctrl+O")
         autoRepeat: false
-        onTriggered: windowStack.push(Qt.resolvedUrl("BrowserWindow.qml"))
+        onTriggered: windowStack.push(Qt.resolvedUrl("BrowseWindow.qml"))
+    }
+
+    Action {
+        id: searchAction
+
+        text: qsTr("Search music")
+        shortcut: qsTr("Ctrl+F")
+        autoRepeat: false
+        onTriggered: pluginManager.searchPlugins.length > 0 ? windowStack.push(Qt.resolvedUrl("SearchWindow.qml"))
+        : informationBox.information(qsTr("No plugins installed"))
     }
     
     Action {
@@ -98,10 +112,26 @@ ApplicationWindow {
     Action {
         id: playAction
 
+        iconSource: "/etc/hildon/theme/mediaplayer/" + (audioPlayer.playing ? audioPlayer.seekable ? "Pause"
+        : "Stop" : "Play") + ".png"
         shortcut: qsTr("Space")
         shortcutContext: Qt.ApplicationShortcut
         autoRepeat: false
-        onTriggered: if (audioPlayer.source) audioPlayer.playing = !audioPlayer.playing;
+        onTriggered: {
+            if (audioPlayer.source) {
+                if (audioPlayer.playing) {
+                    if (audioPlayer.seekable) {
+                        audioPlayer.pause();
+                    }
+                    else {
+                        audioPlayer.stop();
+                    }
+                }
+                else {
+                    audioPlayer.play();
+                }
+            }
+        }
     }
 
     Action {
@@ -150,24 +180,15 @@ ApplicationWindow {
     
     NowPlayingModel {
         id: playlist
-        
-        function loadSongs(folder, clear) {
+
+        function addFolder(folder, clear) {
             var p = directory.path;
             directory.path = folder;
-            var songs = directory.recursiveEntryList();
+            var uris = directory.recursiveEntryList();
             
-            if (songs.length > 0) {
+            if (uris.length > 0) {
                 settings.currentFolder = folder;
-
-                if (clear) {
-                    clearItems();
-                }
-                
-                for (var i = 0; i < songs.length; i++) {
-                    appendSource(songs[i]);
-                }
-
-                informationBox.information(songs.length + " " + qsTr("songs added"));
+                addUris(uris, clear);
             }
             else {
                 directory.path = p;
@@ -175,12 +196,12 @@ ApplicationWindow {
             }
         }
 
-        function playSongs(folder) {
-            loadSongs(folder, true);
+        function playFolder(folder) {
+            addFolder(folder, true);
             audioPlayer.play();
         }
 
-        function loadSong(uri, clear) {
+        function addUri(uri, clear) {
             if (clear) {
                 clearItems();
             }
@@ -189,24 +210,50 @@ ApplicationWindow {
             informationBox.information(qsTr("Song added"));
         }
 
-        function playSong(uri) {
-            loadSong(uri, true);
+        function playUri(uri) {
+            addUri(uri, true);
             audioPlayer.play();
         }
-        
-        onCountChanged: if (count == 0) infoLoader.sourceComponent = infoColumn;
-        onReady: {
-            switch (settings.startupPlaylist) {
-                case SimPlayer.MafwPlaylist:
-                    loadItems();
-                    break;
-                case SimPlayer.FolderPlaylist:
-                    loadSongs(settings.currentFolder, true);
-                    break;
-                default:
-                    break;
+
+        function addUris(uris, clear) {
+            if (clear) {
+                clearItems();
             }
+
+            if (!uris.length) {
+                return;
+            }
+
+            for (var i = 0; i < uris.length; i++) {
+                appendSource(uris[i]);
+            }
+
+            informationBox.information(uris.length + " " + qsTr("songs added"));
         }
+
+        function playUris(uris) {
+            addUris(uris, true);
+            audioPlayer.play();
+        }
+
+        function save() {
+            var p = [];
+
+            for (var i = 0; i < count; i++) {
+                p.push(property(i, "url"));
+            }
+
+            settings.playlist = p;
+            settings.playlistPosition = position;
+        }
+
+        function restore() {
+            addUris(settings.playlist, true);
+            position = settings.playlistPosition;
+        }
+
+        onCountChanged: if (count == 0) infoLoader.sourceComponent = infoColumn;
+        onReady: if (settings.restorePlaylist) restore();
     }
     
     Directory {
@@ -218,21 +265,26 @@ ApplicationWindow {
         sorting: Directory.DirsLast | Directory.IgnoreCase
         nameFilters: SimPlayer.AUDIO_FILENAME_FILTERS
     }
+
+    PluginManager {
+        id: pluginManager
+    }
     
     Settings {
         id: settings
         
-        property string currentFolder
-        property string startupPlaylist: SimPlayer.NoPlaylist
+        property string currentFolder: "/home/user/MyDocs"
+        property variant playlist: []
+        property int playlistPosition: 0
+        property bool restorePlaylist: true
         property int screenOrientation: Qt.WA_Maemo5LandscapeOrientation
-        property int volumeKeysPolicy: SimPlayer.VolumeKeysChangeVolume
         
-        fileName: "/home/user/.config/SimPlayer/simplayer.conf"
+        fileName: SimPlayer.CONFIG_FILENAME
         onScreenOrientationChanged: screen.orientationLock = screenOrientation
     }
     
     Image {
-        id: image
+        id: coverImage
         
         function backupCoverArt() {
             if (playlist.count > 0) {
@@ -269,7 +321,7 @@ ApplicationWindow {
         id: infoLoader
         
         anchors {
-            left: image.right
+            left: coverImage.right
             right: parent.right
             top: parent.top
             bottom: toolsLoader.top
@@ -515,7 +567,7 @@ ApplicationWindow {
         
         height: 70
         anchors {
-            left: image.left
+            left: coverImage.left
             right: volumeButton.left
             bottom: parent.bottom
         }
@@ -542,7 +594,6 @@ ApplicationWindow {
                 id: playButton
 
                 action: playAction
-                iconSource: "/etc/hildon/theme/mediaplayer/" + (audioPlayer.playing ? "Pause" : "Play") + ".png"
                 style: transparentToolButtonStyle
             }
             
@@ -558,7 +609,8 @@ ApplicationWindow {
                 id: shuffleButton
 
                 width: 130
-                iconSource: "/etc/hildon/theme/mediaplayer/Shuffle" + ((checked) || (pressed) ? "Pressed" : "") + ".png"
+                iconSource: "/etc/hildon/theme/mediaplayer/Shuffle" + ((checked) || (pressed) ? "Pressed" : "")
+                + ".png"
                 checkable: true
                 checked: playlist.shuffle
                 autoRepeat: false
@@ -667,14 +719,12 @@ ApplicationWindow {
         }
     }
 
-    VolumeKeys.enabled: settings.volumeKeysPolicy == SimPlayer.VolumeKeysNavigate
-
     contentItem.states: State {
         name: "Portrait"
         when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
 
         AnchorChanges {
-            target: image
+            target: coverImage
             anchors.left: undefined
             anchors.horizontalCenter: parent.horizontalCenter
         }
@@ -682,7 +732,7 @@ ApplicationWindow {
         AnchorChanges {
             target: infoLoader
             anchors.left: parent.left
-            anchors.top: image.bottom
+            anchors.top: coverImage.bottom
         }
 
         AnchorChanges {
@@ -695,4 +745,11 @@ ApplicationWindow {
             anchors.rightMargin: 0
         }
     }
+
+    onClosing: {
+        playlist.save();
+        close.accepted = true;
+    }
+
+    Component.onCompleted: pluginManager.load()
 }

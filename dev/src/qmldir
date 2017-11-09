@@ -1,0 +1,10 @@
+module SimPlayer
+
+BooleanSetting 1.0 BooleanSetting.qml
+GroupSetting 1.0 GroupSetting.qml
+ListSetting 1.0 ListSetting.qml
+ListSettingOption 1.0 ListSettingOption.qml
+SearchPlugin 1.0 SearchPlugin.qml
+Setting 1.0 Setting.qml
+Settings 1.0 Settings.qml
+TextSetting 1.0 TextSetting.qml

@@ -1,4 +1,4 @@
-Source: simplayer
+Source: simplayer-dev
 Section: user/multimedia
 Priority: optional
 Maintainer: Stuart Howarth <showarth@marxoft.co.uk>
@@ -6,13 +6,10 @@ Build-Depends: debhelper (>= 5)
 Standards-Version: 3.7.3
 Homepage: https://github.com/marxoft/simplayer
 
-Package: simplayer
+Package: simplayer-dev
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, qt-components-hildon (>= 0.26.3), qt-components-hildon-viewer (>= 0.1.0)
-Description: A simple folder-based music player
- SimPlayer is a simple music player that provides folder-based music browsing.
- Additional features can be provided via plugins.
-XB-Maemo-Display-Name: SimPlayer
+Depends: ${shlibs:Depends}, ${misc:Depends}, simplayer (>= 0.3.0)
+Description: QML module for SimPlayer plugin development
 XB-Maemo-Icon-26:
  iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAFYHpUWHRSYXcgcHJvZmlsZSB0eXBl
  IGV4aWYAAHjapVZbkiQnDPznFD4CQk+Ow0NE+AY+vpPqnvHser32houuKlpQQlKmBCX/+P2U33CR
